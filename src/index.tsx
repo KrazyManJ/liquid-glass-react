@@ -177,7 +177,12 @@ const GlassContainer = forwardRef<
     const filterId = useId()
     const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
 
-    const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
+    const [isFirefox, setIsFirefox] = useState(false)
+
+    useEffect(() => {
+      const navigatorIsFirefox = navigator.userAgent.toLowerCase().includes("firefox")
+      setIsFirefox(navigatorIsFirefox)
+    }, [])
 
     // Generate shader displacement map when in shader mode
     useEffect(() => {
