@@ -193,8 +193,24 @@ const GlassContainer = forwardRef<
     }
 
     return (
-      <div ref={ref} className={`relative ${className} ${active ? "active" : ""} ${Boolean(onClick) ? "cursor-pointer" : ""}`} style={style} onClick={onClick}>
-        <GlassFilter mode={mode} id={filterId} displacementScale={displacementScale} aberrationIntensity={aberrationIntensity} width={glassSize.width} height={glassSize.height} shaderMapUrl={shaderMapUrl} />
+      <div 
+        ref={ref} 
+        className={`${className}${active ? " active" : ""}`} 
+        style={{
+          ...style,
+          cursor: Boolean(onClick) ? "pointer" : undefined
+        }} 
+        onClick={onClick}
+      >
+        <GlassFilter 
+          mode={mode} 
+          id={filterId} 
+          displacementScale={displacementScale} 
+          aberrationIntensity={aberrationIntensity} 
+          width={glassSize.width} 
+          height={glassSize.height} 
+          shaderMapUrl={shaderMapUrl}
+        />
 
         <div
           className="glass"
@@ -228,8 +244,11 @@ const GlassContainer = forwardRef<
 
           {/* user content stays sharp */}
           <div
-            className="transition-all duration-150 ease-in-out text-white"
             style={{
+              transitionProperty: "all",
+              transitionDuration: "150ms",
+              transitionTimingFunction: "ease-in-out",
+              color: "white",
               position: "relative",
               zIndex: 1,
               font: "500 20px/1 system-ui",
@@ -455,13 +474,22 @@ export default function LiquidGlass({
     left: baseStyle.left || "50%",
   }
 
+  const overLightStyles = {
+    backgroundColor: "black",
+    transitionProperty: "all",
+    transitionDuration: "150ms",
+    transitionTimingFunction: "ease-in-out",
+    pointerEvents: "none"
+  } as CSSProperties
+
   return (
     <>
       {/* Over light effect */}
       <div
-        className={`bg-black transition-all duration-150 ease-in-out pointer-events-none ${overLight ? "opacity-20" : "opacity-0"}`}
         style={{
           ...positionStyles,
+          ...overLightStyles,
+          opacity: overLight ? 0.2 : 0,
           height: glassSize.height,
           width: glassSize.width,
           borderRadius: `${cornerRadius}px`,
@@ -470,9 +498,11 @@ export default function LiquidGlass({
         }}
       />
       <div
-        className={`bg-black transition-all duration-150 ease-in-out pointer-events-none mix-blend-overlay ${overLight ? "opacity-100" : "opacity-0"}`}
         style={{
           ...positionStyles,
+          ...overLightStyles,
+          opacity: overLight ? 1 : 0,
+          mixBlendMode: "overlay",
           height: glassSize.height,
           width: glassSize.width,
           borderRadius: `${cornerRadius}px`,
