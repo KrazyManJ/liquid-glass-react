@@ -1,0 +1,1 @@
+export type RefractionMode = "standard" | "polar" | "prominent" | "shader"
