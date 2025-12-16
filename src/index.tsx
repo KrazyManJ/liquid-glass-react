@@ -1,7 +1,9 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import GlassContainer from "./GlassContainer"
 import { RefractionMode } from "./types"
-
+import { useDimensions } from "./hooks/useDimensions"
+import { useMouseTracking } from "./hooks/useMouseTracking"
+import * as ElasticityUtils from "./elasticity-utils"
 
 interface LiquidGlassProps {
   children: React.ReactNode
@@ -41,163 +43,26 @@ export default function LiquidGlass({
   mode = "standard",
   onClick,
 }: LiquidGlassProps) {
-  const glassRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [isActive, setIsActive] = useState(false)
-  const [glassSize, setGlassSize] = useState({ width: 270, height: 69 })
-  const [internalGlobalMousePos, setInternalGlobalMousePos] = useState({ x: 0, y: 0 })
-  const [internalMouseOffset, setInternalMouseOffset] = useState({ x: 0, y: 0 })
 
-  // Use external mouse position if provided, otherwise use internal
-  const globalMousePos = externalGlobalMousePos || internalGlobalMousePos
-  const mouseOffset = externalMouseOffset || internalMouseOffset
+  const glassRef = useRef<HTMLDivElement>(null)
+  const glassSize = useDimensions(glassRef)
 
-  // Internal mouse tracking
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      const container = mouseContainer?.current || glassRef.current
-      if (!container) {
-        return
-      }
+  const { globalMousePos, mouseOffset } = useMouseTracking({
+    container: mouseContainer?.current || glassRef.current, 
+    externalGlobalMousePos, 
+    externalMouseOffset
+  })
 
-      const rect = container.getBoundingClientRect()
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
+  const calculateDirectionalScale = useCallback(() => 
+    ElasticityUtils.calculateDirectionalScale(elasticity, glassRef, glassSize, globalMousePos)
+  , [elasticity, glassRef, glassSize, globalMousePos])
 
-      setInternalMouseOffset({
-        x: ((e.clientX - centerX) / rect.width) * 100,
-        y: ((e.clientY - centerY) / rect.height) * 100,
-      })
 
-      setInternalGlobalMousePos({
-        x: e.clientX,
-        y: e.clientY,
-      })
-    },
-    [mouseContainer],
-  )
-
-  // Set up mouse tracking if no external mouse position is provided
-  useEffect(() => {
-    if (externalGlobalMousePos && externalMouseOffset) {
-      // External mouse tracking is provided, don't set up internal tracking
-      return
-    }
-
-    const container = mouseContainer?.current || glassRef.current
-    if (!container) {
-      return
-    }
-
-    container.addEventListener("mousemove", handleMouseMove)
-
-    return () => {
-      container.removeEventListener("mousemove", handleMouseMove)
-    }
-  }, [handleMouseMove, mouseContainer, externalGlobalMousePos, externalMouseOffset])
-
-  // Calculate directional scaling based on mouse position
-  const calculateDirectionalScale = useCallback(() => {
-    if (!globalMousePos.x || !globalMousePos.y || !glassRef.current) {
-      return "scale(1)"
-    }
-
-    const rect = glassRef.current.getBoundingClientRect()
-    const pillCenterX = rect.left + rect.width / 2
-    const pillCenterY = rect.top + rect.height / 2
-    const pillWidth = glassSize.width
-    const pillHeight = glassSize.height
-
-    const deltaX = globalMousePos.x - pillCenterX
-    const deltaY = globalMousePos.y - pillCenterY
-
-    // Calculate distance from mouse to pill edges (not center)
-    const edgeDistanceX = Math.max(0, Math.abs(deltaX) - pillWidth / 2)
-    const edgeDistanceY = Math.max(0, Math.abs(deltaY) - pillHeight / 2)
-    const edgeDistance = Math.sqrt(edgeDistanceX * edgeDistanceX + edgeDistanceY * edgeDistanceY)
-
-    // Activation zone: 200px from edges
-    const activationZone = 200
-
-    // If outside activation zone, no effect
-    if (edgeDistance > activationZone) {
-      return "scale(1)"
-    }
-
-    // Calculate fade-in factor (1 at edge, 0 at activation zone boundary)
-    const fadeInFactor = 1 - edgeDistance / activationZone
-
-    // Normalize the deltas for direction
-    const centerDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-    if (centerDistance === 0) {
-      return "scale(1)"
-    }
-
-    const normalizedX = deltaX / centerDistance
-    const normalizedY = deltaY / centerDistance
-
-    // Calculate stretch factors with fade-in
-    const stretchIntensity = Math.min(centerDistance / 300, 1) * elasticity * fadeInFactor
-
-    // X-axis scaling: stretch horizontally when moving left/right, compress when moving up/down
-    const scaleX = 1 + Math.abs(normalizedX) * stretchIntensity * 0.3 - Math.abs(normalizedY) * stretchIntensity * 0.15
-
-    // Y-axis scaling: stretch vertically when moving up/down, compress when moving left/right
-    const scaleY = 1 + Math.abs(normalizedY) * stretchIntensity * 0.3 - Math.abs(normalizedX) * stretchIntensity * 0.15
-
-    return `scaleX(${Math.max(0.8, scaleX)}) scaleY(${Math.max(0.8, scaleY)})`
-  }, [globalMousePos, elasticity, glassSize])
-
-  // Helper function to calculate fade-in factor based on distance from element edges
-  const calculateFadeInFactor = useCallback(() => {
-    if (!globalMousePos.x || !globalMousePos.y || !glassRef.current) {
-      return 0
-    }
-
-    const rect = glassRef.current.getBoundingClientRect()
-    const pillCenterX = rect.left + rect.width / 2
-    const pillCenterY = rect.top + rect.height / 2
-    const pillWidth = glassSize.width
-    const pillHeight = glassSize.height
-
-    const edgeDistanceX = Math.max(0, Math.abs(globalMousePos.x - pillCenterX) - pillWidth / 2)
-    const edgeDistanceY = Math.max(0, Math.abs(globalMousePos.y - pillCenterY) - pillHeight / 2)
-    const edgeDistance = Math.sqrt(edgeDistanceX * edgeDistanceX + edgeDistanceY * edgeDistanceY)
-
-    const activationZone = 200
-    return edgeDistance > activationZone ? 0 : 1 - edgeDistance / activationZone
-  }, [globalMousePos, glassSize])
-
-  // Helper function to calculate elastic translation
-  const calculateElasticTranslation = useCallback(() => {
-    if (!glassRef.current) {
-      return { x: 0, y: 0 }
-    }
-
-    const fadeInFactor = calculateFadeInFactor()
-    const rect = glassRef.current.getBoundingClientRect()
-    const pillCenterX = rect.left + rect.width / 2
-    const pillCenterY = rect.top + rect.height / 2
-
-    return {
-      x: (globalMousePos.x - pillCenterX) * elasticity * 0.1 * fadeInFactor,
-      y: (globalMousePos.y - pillCenterY) * elasticity * 0.1 * fadeInFactor,
-    }
-  }, [globalMousePos, elasticity, calculateFadeInFactor])
-
-  // Update glass size whenever component mounts or window resizes
-  useEffect(() => {
-    const updateGlassSize = () => {
-      if (glassRef.current) {
-        const rect = glassRef.current.getBoundingClientRect()
-        setGlassSize({ width: rect.width, height: rect.height })
-      }
-    }
-
-    updateGlassSize()
-    window.addEventListener("resize", updateGlassSize)
-    return () => window.removeEventListener("resize", updateGlassSize)
-  }, [])
+  const calculateElasticTranslation = useCallback(() => 
+    ElasticityUtils.calculateElasticTranslation(elasticity, glassRef, glassSize, globalMousePos)
+  , [globalMousePos, elasticity])
 
   const transformStyle = `translate(calc(-50% + ${calculateElasticTranslation().x}px), calc(-50% + ${calculateElasticTranslation().y}px)) ${isActive && Boolean(onClick) ? "scale(0.96)" : calculateDirectionalScale()}`
 

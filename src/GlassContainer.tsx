@@ -81,11 +81,6 @@ const GlassContainer = forwardRef<
       }
     }, [mode, glassSize.width, glassSize.height])
 
-    const backdropStyle = {
-      filter: isFirefox ? null : `url(#${filterId})`,
-      backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
-    }
-
     return (
       <div 
         ref={ref} 
@@ -129,10 +124,11 @@ const GlassContainer = forwardRef<
             className="glass__warp"
             style={
               {
-                ...backdropStyle,
+                filter: isFirefox ? undefined : `url(#${filterId})`,
+                backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
                 position: "absolute",
                 inset: "0",
-              } as CSSProperties
+              }
             }
           />
 
