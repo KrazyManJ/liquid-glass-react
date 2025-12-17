@@ -4,6 +4,9 @@ import { RefractionMode } from "./types"
 import { useDimensions } from "./hooks/useDimensions"
 import { useMouseTracking } from "./hooks/useMouseTracking"
 import * as ElasticityUtils from "./elasticity-utils"
+import OverlightEffectLayer from "./layers/OverlightEffectLayer"
+import BorderLayer from "./layers/BorderLayer"
+import HoverLayer from "./layers/HoverLayer"
 
 interface LiquidGlassProps {
   children: React.ReactNode
@@ -88,25 +91,10 @@ export default function LiquidGlass({
 
   return (
     <>
-      {/* Over light effect */}
-      <div
+      <OverlightEffectLayer
+        overLight={overLight}
         style={{
           ...positionStyles,
-          ...overLightStyles,
-          opacity: overLight ? 0.2 : 0,
-          height: glassSize.height,
-          width: glassSize.width,
-          borderRadius: `${cornerRadius}px`,
-          transform: baseStyle.transform,
-          transition: baseStyle.transition,
-        }}
-      />
-      <div
-        style={{
-          ...positionStyles,
-          ...overLightStyles,
-          opacity: overLight ? 1 : 0,
-          mixBlendMode: "overlay",
           height: glassSize.height,
           width: glassSize.width,
           borderRadius: `${cornerRadius}px`,
@@ -139,8 +127,8 @@ export default function LiquidGlass({
         {children}
       </GlassContainer>
 
-      {/* Border layer 1 - extracted from glass container */}
-      <span
+      <BorderLayer
+        mouseOffset={mouseOffset}
         style={{
           ...positionStyles,
           height: glassSize.height,
@@ -148,98 +136,22 @@ export default function LiquidGlass({
           borderRadius: `${cornerRadius}px`,
           transform: baseStyle.transform,
           transition: baseStyle.transition,
-          pointerEvents: "none",
-          mixBlendMode: "screen",
-          opacity: 0.2,
-          padding: "1.5px",
-          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-          WebkitMaskComposite: "xor",
-          maskComposite: "exclude",
-          boxShadow: "0 0 0 0.5px rgba(255, 255, 255, 0.5) inset, 0 1px 3px rgba(255, 255, 255, 0.25) inset, 0 1px 4px rgba(0, 0, 0, 0.35)",
-          background: `linear-gradient(
-          ${135 + mouseOffset.x * 1.2}deg,
-          rgba(255, 255, 255, 0.0) 0%,
-          rgba(255, 255, 255, ${0.12 + Math.abs(mouseOffset.x) * 0.008}) ${Math.max(10, 33 + mouseOffset.y * 0.3)}%,
-          rgba(255, 255, 255, ${0.4 + Math.abs(mouseOffset.x) * 0.012}) ${Math.min(90, 66 + mouseOffset.y * 0.4)}%,
-          rgba(255, 255, 255, 0.0) 100%
-        )`,
-        }}
-      />
-
-      {/* Border layer 2 - duplicate with mix-blend-overlay */}
-      <span
-        style={{
-          ...positionStyles,
-          height: glassSize.height,
-          width: glassSize.width,
-          borderRadius: `${cornerRadius}px`,
-          transform: baseStyle.transform,
-          transition: baseStyle.transition,
-          pointerEvents: "none",
-          mixBlendMode: "overlay",
-          padding: "1.5px",
-          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-          WebkitMaskComposite: "xor",
-          maskComposite: "exclude",
-          boxShadow: "0 0 0 0.5px rgba(255, 255, 255, 0.5) inset, 0 1px 3px rgba(255, 255, 255, 0.25) inset, 0 1px 4px rgba(0, 0, 0, 0.35)",
-          background: `linear-gradient(
-          ${135 + mouseOffset.x * 1.2}deg,
-          rgba(255, 255, 255, 0.0) 0%,
-          rgba(255, 255, 255, ${0.32 + Math.abs(mouseOffset.x) * 0.008}) ${Math.max(10, 33 + mouseOffset.y * 0.3)}%,
-          rgba(255, 255, 255, ${0.6 + Math.abs(mouseOffset.x) * 0.012}) ${Math.min(90, 66 + mouseOffset.y * 0.4)}%,
-          rgba(255, 255, 255, 0.0) 100%
-        )`,
         }}
       />
 
       {/* Hover effects */}
       {Boolean(onClick) && (
-        <>
-          <div
-            style={{
-              ...positionStyles,
-              height: glassSize.height,
-              width: glassSize.width + 1,
-              borderRadius: `${cornerRadius}px`,
-              transform: baseStyle.transform,
-              pointerEvents: "none",
-              transition: "all 0.2s ease-out",
-              opacity: isHovered || isActive ? 0.5 : 0,
-              backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%)",
-              mixBlendMode: "overlay",
-            }}
-          />
-          <div
-            style={{
-              ...positionStyles,
-              height: glassSize.height,
-              width: glassSize.width + 1,
-              borderRadius: `${cornerRadius}px`,
-              transform: baseStyle.transform,
-              pointerEvents: "none",
-              transition: "all 0.2s ease-out",
-              opacity: isActive ? 0.5 : 0,
-              backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 80%)",
-              mixBlendMode: "overlay",
-            }}
-          />
-          <div
-            style={{
-              ...baseStyle,
-              height: glassSize.height,
-              width: glassSize.width + 1,
-              borderRadius: `${cornerRadius}px`,
-              position: baseStyle.position,
-              top: baseStyle.top,
-              left: baseStyle.left,
-              pointerEvents: "none",
-              transition: "all 0.2s ease-out",
-              opacity: isHovered ? 0.4 : isActive ? 0.8 : 0,
-              backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%)",
-              mixBlendMode: "overlay",
-            }}
-          />
-        </>
+        <HoverLayer
+          isHovered={isHovered}
+          isActive={isActive}
+          baseStyle={baseStyle}
+          positionStyles={positionStyles}
+          style={{
+            height: glassSize.height,
+            width: glassSize.width + 1,
+            borderRadius: `${cornerRadius}px`,
+          }}
+        />
       )}
     </>
   )
