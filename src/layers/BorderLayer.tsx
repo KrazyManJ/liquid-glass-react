@@ -1,7 +1,6 @@
-import { ComponentProps } from "react";
-import { Position } from "../types";
+import { ComponentPropsWithoutChildren, Position } from "../types";
 
-interface BorderLayerProps extends ComponentProps<"div"> {
+interface BorderLayerProps extends ComponentPropsWithoutChildren<"div"> {
   mouseOffset: Position
 }
 

@@ -1,6 +1,7 @@
-import { ComponentProps, CSSProperties } from "react"
+import { CSSProperties } from "react"
+import { ComponentPropsWithoutChildren } from "../types"
 
-interface HoverLayerProps extends ComponentProps<"div"> {
+interface HoverLayerProps extends ComponentPropsWithoutChildren<"div"> {
   isHovered: boolean,
   isActive: boolean,
   baseStyle: CSSProperties,

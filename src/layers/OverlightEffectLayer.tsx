@@ -1,6 +1,7 @@
-import { ComponentProps, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
+import { ComponentPropsWithoutChildren } from "../types";
 
-interface OverlightEffectLayerProps extends ComponentProps<"div"> {
+interface OverlightEffectLayerProps extends ComponentPropsWithoutChildren<"div"> {
   overLight: boolean
 }
 
@@ -8,9 +9,6 @@ const OverlightEffectLayer = ({overLight, style, ...props}: OverlightEffectLayer
 
   const overLightStyles = {
     backgroundColor: "black",
-    transitionProperty: "all",
-    transitionDuration: "150ms",
-    transitionTimingFunction: "ease-in-out",
     pointerEvents: "none"
   } as CSSProperties
 

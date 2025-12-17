@@ -111,7 +111,6 @@ export default function LiquidGlass({
         onMouseLeave={() => setIsHovered(false)}
         onMouseDown={() => setIsActive(true)}
         onMouseUp={() => setIsActive(false)}
-        active={isActive}
         overLight={overLight}
         onClick={onClick}
         mode={mode}
