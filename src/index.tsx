@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
+import { ComponentProps, type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import GlassContainer from "./GlassContainer"
 import { RefractionMode } from "./types"
 import { useDimensions } from "./hooks/useDimensions"
@@ -8,8 +8,8 @@ import OverlightEffectLayer from "./layers/OverlightEffectLayer"
 import BorderLayer from "./layers/BorderLayer"
 import HoverLayer from "./layers/HoverLayer"
 
-interface LiquidGlassProps {
-  children: React.ReactNode
+
+interface LiquidGlassProps extends ComponentProps<"div"> {
   displacementScale?: number
   blurAmount?: number
   saturation?: number
@@ -18,13 +18,10 @@ interface LiquidGlassProps {
   cornerRadius?: number
   globalMousePos?: { x: number; y: number }
   mouseOffset?: { x: number; y: number }
-  mouseContainer?: React.RefObject<HTMLElement | null> | null
-  className?: string
+  mouseContainer?: React.RefObject<HTMLElement | null>
   padding?: string
-  style?: React.CSSProperties
   overLight?: boolean
   mode?: RefractionMode
-  onClick?: () => void
 }
 
 
@@ -38,7 +35,7 @@ export default function LiquidGlass({
   cornerRadius = 999,
   globalMousePos: externalGlobalMousePos,
   mouseOffset: externalMouseOffset,
-  mouseContainer = null,
+  mouseContainer = undefined,
   className = "",
   padding = "24px 32px",
   overLight = false,
@@ -96,7 +93,7 @@ export default function LiquidGlass({
       />
 
       <GlassContainer
-        ref={glassRef}
+        glassRef={glassRef}
         className={className}
         style={baseStyle}
         cornerRadius={cornerRadius}

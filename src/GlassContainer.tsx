@@ -1,4 +1,4 @@
-import { forwardRef, useId, ComponentProps } from "react"
+import { useId, ComponentProps, RefObject } from "react"
 import { RefractionMode } from "./types"
 import GlassFilter from "./GlassFilter"
 import useAgent from "./hooks/useAgent"
@@ -6,8 +6,7 @@ import useShader from "./hooks/useShader"
 
 
 interface GlassContainerProps extends ComponentProps<"div"> {
-  className?: string
-  style?: React.CSSProperties
+  glassRef: RefObject<HTMLDivElement>
   displacementScale?: number
   blurAmount?: number
   saturation?: number
@@ -21,7 +20,8 @@ interface GlassContainerProps extends ComponentProps<"div"> {
 }
 
 
-const GlassContainer = forwardRef<HTMLDivElement, GlassContainerProps>(({
+const GlassContainer = ({
+  glassRef,
   children,
   style,
   displacementScale = 25,
@@ -39,66 +39,63 @@ const GlassContainer = forwardRef<HTMLDivElement, GlassContainerProps>(({
   onClick,
   mode = "standard",
   ...props
-}, ref) => {
-    const filterId = useId()
+}: GlassContainerProps) => {
+  const filterId = useId()
 
-    const { shaderMapUrl } = useShader(mode, glassSize)
-    const { isFirefox } = useAgent()
+  const { shaderMapUrl } = useShader(mode, glassSize)
+  const { isFirefox } = useAgent()
 
-    return (
-      <div 
-        ref={ref}
-        style={{...style,
-          cursor: Boolean(onClick) ? "pointer" : undefined
+  return (
+    <div 
+      ref={glassRef}
+      style={{...style,
+        cursor: Boolean(onClick) ? "pointer" : undefined
+      }}
+      {...props}
+    >
+      <GlassFilter 
+        mode={mode} 
+        id={filterId} 
+        displacementScale={displacementScale} 
+        aberrationIntensity={aberrationIntensity} 
+        width={glassSize.width} 
+        height={glassSize.height} 
+        shaderMapUrl={shaderMapUrl}
+      />
+
+      <div
+        style={{
+          padding,
+          borderRadius: `${cornerRadius}px`,
+          position: "relative",
+          overflow: "hidden",
+          boxShadow: overLight ? "0px 16px 70px rgba(0, 0, 0, 0.75)" : "0px 12px 40px rgba(0, 0, 0, 0.25)",
         }}
-        {...props}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
       >
-        <GlassFilter 
-          mode={mode} 
-          id={filterId} 
-          displacementScale={displacementScale} 
-          aberrationIntensity={aberrationIntensity} 
-          width={glassSize.width} 
-          height={glassSize.height} 
-          shaderMapUrl={shaderMapUrl}
+        <div
+          style={{
+            filter: isFirefox ? undefined : `url(#${filterId})`,
+            backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
+            position: "absolute",
+            inset: "0",
+          }}
         />
 
         <div
           style={{
-            padding,
-            borderRadius: `${cornerRadius}px`,
             position: "relative",
-            overflow: "hidden",
-            boxShadow: overLight ? "0px 16px 70px rgba(0, 0, 0, 0.75)" : "0px 12px 40px rgba(0, 0, 0, 0.25)",
+            textShadow: overLight ? "0px 2px 12px rgba(0, 0, 0, 0)" : "0px 2px 12px rgba(0, 0, 0, 0.4)",
           }}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
         >
-          <div
-            style={{
-              filter: isFirefox ? undefined : `url(#${filterId})`,
-              backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
-              position: "absolute",
-              inset: "0",
-            }}
-          />
-
-          <div
-            style={{
-              position: "relative",
-              textShadow: overLight ? "0px 2px 12px rgba(0, 0, 0, 0)" : "0px 2px 12px rgba(0, 0, 0, 0.4)",
-            }}
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </div>
-    )
-  },
-)
-
-GlassContainer.displayName = "GlassContainer";
+    </div>
+  )
+}
 
 export default GlassContainer;
