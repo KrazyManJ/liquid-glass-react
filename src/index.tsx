@@ -81,14 +81,6 @@ export default function LiquidGlass({
     left: baseStyle.left || "50%",
   }
 
-  const overLightStyles = {
-    backgroundColor: "black",
-    transitionProperty: "all",
-    transitionDuration: "150ms",
-    transitionTimingFunction: "ease-in-out",
-    pointerEvents: "none"
-  } as CSSProperties
-
   return (
     <>
       <OverlightEffectLayer
@@ -139,7 +131,6 @@ export default function LiquidGlass({
         }}
       />
 
-      {/* Hover effects */}
       {Boolean(onClick) && (
         <HoverLayer
           isHovered={isHovered}
